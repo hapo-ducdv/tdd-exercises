@@ -36,7 +36,11 @@ class ArticlesApiController extends Controller
      */
     public function store(CreateArticleRequest $request)
     {
-        return Article::create($request->all(), 201);
+        if (strlen($request['title']) > 200) {
+            return response()->json(['message' => "title is too long. Maximum length is 200 characters"], 422);
+        } else {
+            return Article::create($request->all(), 201);
+        }
     }
 
     /**
