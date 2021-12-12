@@ -81,6 +81,6 @@ class ArticlesApiController extends Controller
      */
     public function destroy($id)
     {
-        //
+        return Article::findOrFail($id)->delete();
     }
 }
