@@ -11,6 +11,8 @@ class ArticleApiUnitTest extends TestCase
      *
      * @return void
      */
+
+    /** @test */
     public function itCanCreateAnArticle()
     {
         $data = [
