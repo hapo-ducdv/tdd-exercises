@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\CreateArticleRequest;
+use  App\Models\Article;
 
 class ArticlesApiController extends Controller
 {
