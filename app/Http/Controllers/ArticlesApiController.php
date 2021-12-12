@@ -35,7 +35,7 @@ class ArticlesApiController extends Controller
      */
     public function store(CreateArticleRequest $request)
     {
-        dd('success!');
+        return Article::create($request->all());
     }
 
     /**
