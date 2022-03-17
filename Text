@@ -1,0 +1,92 @@
+<table border="1">
+    <thead>
+    <tr bgcolor="#969696">
+        <th colspan="8">CHI HO LUONG THANG 03-2022</th>
+    </tr>
+    <tr bgcolor="#c0c0c0">
+        <th><b>STT</b></th>
+        <th width="200"><b>Tên NV</b></th>
+        <th width="200"><b>Số tài khoản</b></th>
+        <th width="200"><b>Số tiền</b></th>
+        <th><b>Nội dung giao dịch</b></th>
+        <th><b>Số CMND</b></th>
+        <th><b>Mã NV</b></th>
+        <th><b>Chức danh</b></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td align="center">1</td>
+        <td>Dinh Van Duc</td>
+        <td>20000000</td>
+        <td>20000000</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td align="center">2</td>
+        <td>Dinh Van Hoc</td>
+        <td>10000000</td>
+        <td>10000000</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    </tbody>
+</table>
+<br>
+<br>
+<table border="1">
+    <thead>
+    <tr>
+        <th colspan="12">CHI HO LUONG THANG 03-2022</th>
+    </tr>
+    <tr bgcolor="#548dd4">
+        <th><b>STT</b></th>
+        <th width="200"><b>Tên NV</b></th>
+        <th><b>Mã NV</b></th>
+        <th><b>Chức danh</b></th>
+        <th width="200"><b>Số tiền</b></th>
+        <th><b>Mã ngân hàng</b></th>
+        <th width="200"><b>Số tài khoản</b></th>
+        <th><b>Số CMND</b></th>
+        <th><b>Nơi cấp CMND</b></th>
+        <th><b>Số thẻ (thẻ ACB)</b></th>
+        <th><b>Nội dung giao dịch</b></th>
+        <th width="200"><b>Tên ngân hàng</b></th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td align="center">1</td>
+            <td>Dinh Van Duc</td>
+            <td></td>
+            <td></td>
+            <td>20000000</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>Techcombank</td>
+        </tr>
+        <tr>
+            <td align="center">2</td>
+            <td>Dinh Van Hoc</td>
+            <td></td>
+            <td></td>
+            <td>10000000</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>TPbank</td>
+        </tr>
+    </tbody>
+</table>
