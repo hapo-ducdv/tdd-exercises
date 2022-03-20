@@ -4,6 +4,7 @@ $startDate = $this->faker->randomElement([new DateTime('first day of last month'
 $endDate = Carbon::now()->month == Carbon::parse($startDate)->month ? new DateTime('last day of this month') : new DateTime('last day of last month');
 
 'user_id' => $this->faker->unique()->numberBetween(1, User::count()),
+Payroll::factory()->count(User::count())->create();
 
 'bank_name' => $this->faker->randomElement(['ACB', 'Techcombannk', 'Vietcombank', 'TPbank', 'Agribank']),
 'bank_branch' => $this->faker->streetName(),
