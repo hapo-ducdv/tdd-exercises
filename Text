@@ -1,3 +1,5 @@
+'provinceOfBank' => $this->type == User::ROLE_RS_USER ? ['required', 'string', 'max:255'] : '',
+
 $model = $this->model->join('users', 'users.id', 'payrolls.user_id')->whereNotNull('users.role_id');
 
         if ($request->query() && $request->yearMonth != null) {
@@ -70,4 +72,3 @@ $model = $this->model->join('users', 'users.id', 'payrolls.user_id')->whereNotNu
      *   }
      *)
      **/
-     
