@@ -3,7 +3,7 @@ $user = User::whereNull('role_id')->inRandomOrder()->firstOrFail();
 $startDate = $this->faker->randomElement([new DateTime('first day of last month'), new DateTime('first day of this month')]);
 $endDate = Carbon::now()->month == Carbon::parse($startDate)->month ? new DateTime('last day of this month') : new DateTime('last day of last month');
 
-'user_id' => $this->faker->unique()->numberBetween(1, 15),
+'user_id' => $this->faker->unique()->numberBetween(1, User::count()),
 
 'bank_name' => $this->faker->randomElement(['ACB', 'Techcombannk', 'Vietcombank', 'TPbank', 'Agribank']),
 'bank_branch' => $this->faker->streetName(),
