@@ -1,3 +1,7 @@
+$user = User::whereNull('role_id')->inRandomOrder()->firstOrFail();
+
+'user_id' => $this->faker->unique()->numberBetween(1, 15),
+
 'bank_name' => $this->faker->randomElement(['ACB', 'Techcombannk', 'Vietcombank', 'TPbank', 'Agribank']),
 'bank_branch' => $this->faker->streetName(),
 'province_of_bank' => $this->faker->city(),
