@@ -83,3 +83,7 @@ $model = $this->model->join('users', 'users.id', 'payrolls.user_id')->whereNotNu
      *   }
      *)
      **/
+
+'start_date' => $this->faker->randomElement([new DateTime('first day of last month'), new DateTime('first day of this month')]),
+'end_date' => $this->faker->randomElement([new DateTime('last day of last month'), new DateTime('first day of this month')]),
+            
