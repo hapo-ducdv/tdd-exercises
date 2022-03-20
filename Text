@@ -1,92 +1,21 @@
-<table border="1">
-    <thead>
-    <tr bgcolor="#969696">
-        <th colspan="8">CHI HO LUONG THANG 03-2022</th>
-    </tr>
-    <tr bgcolor="#c0c0c0">
-        <th><b>STT</b></th>
-        <th width="200"><b>Tên NV</b></th>
-        <th width="200"><b>Số tài khoản</b></th>
-        <th width="200"><b>Số tiền</b></th>
-        <th><b>Nội dung giao dịch</b></th>
-        <th><b>Số CMND</b></th>
-        <th><b>Mã NV</b></th>
-        <th><b>Chức danh</b></th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <td align="center">1</td>
-        <td>Dinh Van Duc</td>
-        <td>20000000</td>
-        <td>20000000</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>
-    <tr>
-        <td align="center">2</td>
-        <td>Dinh Van Hoc</td>
-        <td>10000000</td>
-        <td>10000000</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>
-    </tbody>
-</table>
-<br>
-<br>
-<table border="1">
-    <thead>
-    <tr>
-        <th colspan="12">CHI HO LUONG THANG 03-2022</th>
-    </tr>
-    <tr bgcolor="#548dd4">
-        <th><b>STT</b></th>
-        <th width="200"><b>Tên NV</b></th>
-        <th><b>Mã NV</b></th>
-        <th><b>Chức danh</b></th>
-        <th width="200"><b>Số tiền</b></th>
-        <th><b>Mã ngân hàng</b></th>
-        <th width="200"><b>Số tài khoản</b></th>
-        <th><b>Số CMND</b></th>
-        <th><b>Nơi cấp CMND</b></th>
-        <th><b>Số thẻ (thẻ ACB)</b></th>
-        <th><b>Nội dung giao dịch</b></th>
-        <th width="200"><b>Tên ngân hàng</b></th>
-    </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td align="center">1</td>
-            <td>Dinh Van Duc</td>
-            <td></td>
-            <td></td>
-            <td>20000000</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>Techcombank</td>
-        </tr>
-        <tr>
-            <td align="center">2</td>
-            <td>Dinh Van Hoc</td>
-            <td></td>
-            <td></td>
-            <td>10000000</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>TPbank</td>
-        </tr>
-    </tbody>
-</table>
+$model = $this->model->join('users', 'users.id', 'payrolls.user_id')->whereNotNull('users.role_id');
+
+        if ($request->query() && $request->yearMonth != null) {
+            $time = Carbon::parse($request->yearMonth);
+            $year = $time->year;
+            $month = $time->month;
+            $query = $model->whereMonth('start_date', $month)
+                ->whereMonth('end_date', $month)
+                ->whereYear('start_date', $year)
+                ->whereYear('end_date', $year);
+        } else {
+            $time = Carbon::now();
+            $currentDay = $time->day;
+            $currentYear = $time->year;
+            $currentMonth = $time->month;
+            $previousMonth = $time->subMonth()->month;
+            $query = $model->whereMonth('start_date', $currentDay <= self::CHECK_DAY ? $previousMonth : $currentMonth)
+                ->whereMonth('end_date', $currentDay <= self::CHECK_DAY ? $previousMonth : $currentMonth)
+                ->whereYear('start_date', $currentYear)
+                ->whereYear('end_date', $currentYear);
+        }
