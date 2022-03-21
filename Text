@@ -1,5 +1,20 @@
-import axios from '@/helper/axiosBase';
+const handleSubmit = async(e) => {
+    e.preventDefault();
+    const isACBValues = [1, 2];
+    const dateFormat = 'YYYY-MM';
+    const isValidDate = moment(formInput['month'], dateFormat, true).isValid();
+    !formInput['month'] ? setErrors(values => ({ ...values, month: validation.exportExcel.monthRequired })) : '';
+    !isValidDate && formInput['month'] ? setErrors(values => ({ ...values, month: validation.exportExcel.monthDateFormat})) : '';
+    !formInput['inACB'] ? setErrors(values => ({ ...values, inACB: validation.exportExcel.isACBRequired })) : '';
+    formInput['inACB'] && !isACBValues.includes(parseInt(formInput['inACB'])) ? setErrors(values => ({ ...values, inACB: validation.exportExcel.isACBIn})) : '';
+    if (formInput['month'] && isValidDate && formInput['inACB'] && isACBValues.includes(parseInt(formInput['inACB']))) {
+      setErrors([]);
+      dispatch(exportPayrollExcel(formInput));
+    }
+  }
 
+
+import axios from '@/helper/axiosBase';
 export const exportPayrollExcel = (value) => async () => {
     try {
         // await axios.get(`/payrolls/export?month=${value['month']}&inACB=${value['isACB']}`, {responseType: 'blob'})
