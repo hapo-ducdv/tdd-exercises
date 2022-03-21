@@ -1,3 +1,30 @@
+import axios from '@/helper/axiosBase';
+
+export const exportPayrollExcel = (value) => async () => {
+    try {
+        // await axios.get(`/payrolls/export?month=${value['month']}&inACB=${value['isACB']}`, {responseType: 'blob'})
+        //     .then((response) => {
+        //     console.log(response);
+        //     const url = window.URL.createObjectURL(new Blob([response.data]));
+        //     const link = document.createElement('a');
+        //     link.href = url;
+        //     link.setAttribute('download', 'excel.xlsx');
+        //     document.body.appendChild(link);
+        //     link.click();
+        // });
+        const response = await axios.get(`/payrolls/export?month=${value['month']}&inACB=${value['isACB']}`, {responseType: 'blob'})
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'excel.xlsx');
+        document.body.appendChild(link);
+        link.click();
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
 $user = User::whereNull('role_id')->inRandomOrder()->firstOrFail();
 
 $startDate = $this->faker->randomElement([new DateTime('first day of last month'), new DateTime('first day of this month')]);
