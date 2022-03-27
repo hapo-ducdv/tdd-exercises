@@ -1,0 +1,77 @@
+public function run()
+    {
+        DB::table('payrolls')->truncate();
+        $internship = [
+            'userId' => 4,
+            'salaryGross' => 3000000,
+            'numberWorkHours' => 150,
+            'standardWorkHours' => 176,
+            'hourOvertimeDetails' => [],
+            'subsidy' => [],
+        ];
+
+        $partTime = [
+            'userId' => 5,
+            'salaryOneHour' => 30000,
+            'numberWorkHours' => 150,
+            'hourOvertimeDetails' => [],
+            'subsidy' => [],
+        ];
+
+        $array = [
+            'salaryGross' => 16098359,
+            'hourOvertimeDetails' => [
+                'normalDayHours' => 52,
+                'dayOffHours' => 23,
+                'holidayHours' => 15,
+            ],
+            'subsidyDetails' => [
+                [
+                    'name' => 'Tiền xăng xe',
+                    'money' => 500000
+                ],
+                [
+                    'name' => 'Tiền ăn',
+                    'money' => 500000
+                ]
+            ],
+            'numberDependentPerson' => 0,
+            'otherDeductionsDetails' => [
+                [
+                    'name' => 'Tiền đi đẻ',
+                    'money' => 500000
+                ],
+                [
+                    'name' => 'Tiền hỗ trợ sau tai nạn',
+                    'money' => 500000
+                ]
+            ],
+        ];
+
+        $official = array_merge($array, ['userId' => 6]);
+        $officialQuitJobBefore = array_merge($array, ['userId' => 7]);
+        $officialQuitJobAfter = array_merge($array, ['userId' => 8]);
+        $officialAndProbation = array_merge($array, ['userId' => 9]);
+        $probation = array_merge($array, ['userId' => 10]);
+        $probationQuitJob = array_merge($array, ['userId' => 11]);
+
+        $formula = new PayrollService(new Payroll());
+
+//        $dataInternship = $formula->payrollFormula($internship);
+//        $dataPartTime = $formula->payrollFormula($partTime);
+//        $dataOfficial = $formula->payrollFormula($official);
+//        $dataOfficialQuitJobBefore = $formula->payrollFormula($officialQuitJobBefore);
+//        $dataOfficialQuitJobAfter = $formula->payrollFormula($officialQuitJobAfter);
+        $dataOfficialAndProbation = $formula->payrollFormula($officialAndProbation);
+//        $dataProbation = $formula->payrollFormula($probation);
+//        $dataProbationQuitJob = $formula->payrollFormula($probationQuitJob);
+
+//        Payroll::factory()->create($dataInternship);
+//        Payroll::factory()->create($dataPartTime);
+//        Payroll::factory()->create($dataOfficial);
+//        Payroll::factory()->create($dataOfficialQuitJobBefore);
+//        Payroll::factory()->create($dataOfficialQuitJobAfter);
+        Payroll::factory()->create($dataOfficialAndProbation);
+//        Payroll::factory()->create($dataProbation);
+//        Payroll::factory()->create($dataProbationQuitJob);
+    }
