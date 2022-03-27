@@ -1,0 +1,141 @@
+public function payrollFormula($request)
+    {
+        $user = User::findOrFail($request['userId']);
+        $workStatus = $user['work_status'];
+        $time = Carbon::now()->format(config('app.format_date'));
+        if ($workStatus !== User::WORK_STATUS_PROBATION) {
+            $salaryGross = !empty($request['salaryGross']) ? $request['salaryGross'] : 0;
+        } else {
+            $salaryGross = !empty($request['salaryGross']) ? $request['salaryGross'] * 85 / 100 : 0;
+        }
+        $numberWorkHours = !empty($request['numberWorkHours']) ? $request['numberWorkHours'] : 0;
+        $standardWorkHours = !empty($request['standardWorkHours']) ? $request['standardWorkHours'] : 0;
+        if (empty($request['salaryOneHour'])) {
+            $salaryOneHour = $salaryGross / (config('app.standard_number_of_work_days') * config('app.default_number_of_work_hours_in_day'));
+        } else {
+            $salaryOneHour = $request['salaryOneHour'] ?? 0;
+        }
+
+        $generalSettingOvertimeCoefficient = GeneralSetting::query()->getGeneralSettingsType(GeneralSetting::OVERTIME_COEFFICIENT, $time)->first()?->overtime_coefficient ?? [];
+        $generalSettingOvertimeCoefficient = $generalSettingOvertimeCoefficient ? json_decode($generalSettingOvertimeCoefficient) : [];
+        $salaryOvertime = 0;
+        if (!empty($request['hourOvertimeDetails'])) {
+            $normalDay = isset($generalSettingOvertimeCoefficient->coefficientDayNormal) ? ($request['hourOvertimeDetails']['normalDayHours'] * $salaryOneHour * $generalSettingOvertimeCoefficient->coefficientDayNormal) : 0;
+            $dayOff = isset($generalSettingOvertimeCoefficient->coefficientDayOff) ? ($request['hourOvertimeDetails']['dayOffHours'] * $salaryOneHour * $generalSettingOvertimeCoefficient->coefficientDayOff) : 0;
+            $holiday = isset($generalSettingOvertimeCoefficient->coefficientHoliday) ? ($request['hourOvertimeDetails']['holidayHours'] * $salaryOneHour * $generalSettingOvertimeCoefficient->coefficientHoliday) : 0;
+            $salaryOvertime = $normalDay + $dayOff + $holiday;
+        }
+        $subsidy = 0;
+        if (!empty($request['subsidyDetails'])) {
+            foreach ($request['subsidyDetails'] as $subsidyDetail) {
+                $subsidy += $subsidyDetail['money'];
+            }
+        }
+        $otherDeductions = 0;
+        if (!empty($request['otherDeductionsDetails'])) {
+            foreach ($request['otherDeductionsDetails'] as $otherDeductionsDetail) {
+                $otherDeductions += $otherDeductionsDetail['money'];
+            }
+        }
+        $salaryPaidInsurance = GeneralSetting::getGeneralSettingsType(GeneralSetting::PRIMARY_SALARY, $time)->first()?->primary_salary ?? 0;
+        $generalSettingPersonalInsurance = GeneralSetting::getGeneralSettingsType(GeneralSetting::PERSONAL_INSURANCE, $time)->first()?->personal_insurance ?? 0;
+        $insuranceEmployee = $salaryPaidInsurance * ($generalSettingPersonalInsurance / 100);
+        $totalAmountReceived = $salaryGross + $salaryOvertime + $subsidy;
+        $generalSettingDeduction = GeneralSetting::getGeneralSettingsType(GeneralSetting::DEDUCTION_FOR_FAMILY_CONDITION, $time)->first() ?? [];
+        $totalDeductionFamily = isset($request['numberDependentPerson']) && isset($generalSettingDeduction['deduction_for_personal']) ? $generalSettingDeduction['deduction_for_personal'] + ($request['numberDependentPerson'] * $generalSettingDeduction['deduction_for_dependent_person']) : 0;
+        $salaryOvertimeInsurance = 0;
+        if (!empty($request['hourOvertimeDetails'])) {
+            $normalDay = ($request['hourOvertimeDetails']['normalDayHours'] * $salaryOneHour * config('app.difference_is_not_taxable'));
+            $dayOff = ($request['hourOvertimeDetails']['dayOffHours'] * $salaryOneHour);
+            $holiday = ($request['hourOvertimeDetails']['holidayHours'] * $salaryOneHour);
+            $salaryOvertimeInsurance = $normalDay + $dayOff + $holiday;
+        }
+        $incomeTaxes = $totalAmountReceived - $totalDeductionFamily - $otherDeductions - $salaryOvertimeInsurance - $insuranceEmployee;
+        $generalSettingPitRate = GeneralSetting::where('type', GeneralSetting::PIT_RATE)
+            ->whereDate('start_date', '<=', $time)
+            ->whereDate('end_date', '>', $time)
+            ->first()?->pit_rate ?? [];
+        $generalSettingPitRate = $generalSettingPitRate ? json_decode($generalSettingPitRate) : [];
+        $personalIncomeTax = 0;
+        foreach ($generalSettingPitRate as $key => $value) {
+            if ($incomeTaxes <= 0) {
+                $personalIncomeTax = 0;
+                break;
+            }
+            if ($incomeTaxes <= $value->valueMoney) {
+                $personalIncomeTax = $incomeTaxes * ($value->valuePercent / 100) - $value->valueReduce;
+                break;
+            }
+            if ($incomeTaxes > $value->valueMoney && $key === count($generalSettingPitRate) - 1) {
+                $personalIncomeTax = $incomeTaxes * ($value->valuePercent / 100) - $value->valueReduce;
+                break;
+            }
+        }
+
+        $amountActuallyReceived = 0;
+
+        //INTERNSHIP
+        if ($workStatus === User::WORK_STATUS_INTERNSHIP) {
+            $amountActuallyReceived = $salaryGross * $numberWorkHours / $standardWorkHours + $subsidy;
+        }
+
+        //PART_TIME
+        if ($workStatus === User::WORK_STATUS_PART_TIME) {
+            $amountActuallyReceived = $salaryOneHour * $numberWorkHours + $subsidy;
+        }
+
+        $dateLeaveCompany = $user['date_leave_company'];
+        $dateApplyWorkStatus = $user['date_apply_work_status'];
+//        dd($dateApplyWorkStatus);
+        $dateBreak = Carbon::createFromDate(null, null, self::BREAK_DAY)->format(config('app.format_date'));
+        $numberWorkingDays = 10;
+        $numberWorkingDaysOfficial = 10;
+        $numberWorkingDaysProbation = 10;
+        $lastDayMonth = new Carbon('last day of this month');
+        $lastDayMonth = $lastDayMonth->format(config('app.format_date'));
+
+        //OFFICIAL
+        if ($workStatus === User::WORK_STATUS_OFFICIAL) {
+            if ($dateLeaveCompany < $dateBreak) {
+                $insuranceEmployee = 0;
+                $amountActuallyReceived = $totalAmountReceived - $personalIncomeTax - $insuranceEmployee;
+                $amountActuallyReceived = $amountActuallyReceived * $numberWorkingDays / config('app.standard_number_of_work_days');
+            } elseif ($dateLeaveCompany) {
+
+            } else {
+                $amountActuallyReceived = $totalAmountReceived - $personalIncomeTax - $insuranceEmployee;
+            }
+        }
+
+        //PROBATION
+        if ($workStatus === User::WORK_STATUS_PROBATION) {
+            if ($dateLeaveCompany < $lastDayMonth) {
+                $insuranceEmployee = 0;
+                $amountActuallyReceived = $totalAmountReceived - $personalIncomeTax - $insuranceEmployee;
+                $amountActuallyReceived = $amountActuallyReceived * $numberWorkingDays / config('app.standard_number_of_work_days');
+            } else {
+                $amountActuallyReceived = $totalAmountReceived - $personalIncomeTax - $insuranceEmployee;
+            }
+        }
+
+        return [
+            'user_id' => $user['id'],
+            'salary_gross' => $salaryGross,
+            'salary_one_hour' => $salaryOneHour,
+            'salary_overtime' => $salaryOvertime,
+            'subsidy' => $subsidy,
+            'total_amount_received' => $totalAmountReceived,
+            'total_deduction_family' => $totalDeductionFamily,
+            'income_taxes' => $incomeTaxes,
+            'personal_income_tax' => $personalIncomeTax,
+            'insurance_employee' => $insuranceEmployee,
+            'other_deductions' => $otherDeductions,
+            'amount_actually_received' => $amountActuallyReceived,
+            'hour_overtime_details' => !empty($request['hourOvertimeDetails']) ? json_encode($request['hourOvertimeDetails']) : null,
+            'subsidy_details' => !empty($request['subsidyDetails']) ? json_encode($request['subsidyDetails']) : null,
+            'number_dependent_person' => isset($request['numberDependentPerson']) ? $request['numberDependentPerson'] : 0,
+            'other_deductions_detail' => !empty($request['subsidyDetails']) ? json_encode($request['otherDeductionsDetails']) : null,
+            'status' => mt_rand(1, 4),
+            'number_work_hours' => !empty($request['numberWorkHours']) ? $request['numberWorkHours'] : config('app.standard_number_of_work_days') * config('app.default_number_of_work_hours_in_day'),
+        ];
+    }
