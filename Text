@@ -1,3 +1,22 @@
+public function definition()
+    {
+        $user = User::whereNull('role_id')->inRandomOrder()->firstOrFail();
+
+        return [
+            'created_by' => $user->id,
+            'updated_by' => $user->id,
+            'start_date' => new DateTime('first day of this month'),
+            'end_date' => new DateTime('last day of this month'),
+        ];
+    }
+   
+    
+    
+$table->integer('number_working_day')->comment('Số giờ làm việc')->change();
+$table->renameColumn('number_working_day', 'number_work_hours');
+
+
+
 const handleSubmit = async(e) => {
     e.preventDefault();
     const isACBValues = [1, 2];
