@@ -1,0 +1,60 @@
+'internship' => [
+                'name' => 'Duc Intern',
+                'email' => 'duc.intern@haposoft.com',
+                'role_ams_id' => User::ROLE_AMS_USER,
+                'role_id' => User::ROLE_RS_USER,
+                'work_status' => User::WORK_STATUS_INTERNSHIP
+            ],
+            'partTime' => [
+                'name' => 'Duc Part Time',
+                'email' => 'duc.part@haposoft.com',
+                'role_ams_id' => User::ROLE_AMS_USER,
+                'role_id' => User::ROLE_RS_USER,
+                'work_status' => User::WORK_STATUS_PART_TIME
+            ],
+            'official' => [
+                'name' => 'Duc Official',
+                'email' => 'duc.official@haposoft.com',
+                'role_ams_id' => User::ROLE_AMS_USER,
+                'role_id' => User::ROLE_RS_USER,
+                'work_status' => User::WORK_STATUS_OFFICIAL
+            ],
+            'officialQuitJobBefore' => [
+                'name' => 'Duc Official Quit Job Before',
+                'email' => 'hapo.official.quit.job.before@haposoft.com',
+                'role_ams_id' => User::ROLE_AMS_USER,
+                'role_id' => User::ROLE_RS_USER,
+                'work_status' => User::WORK_STATUS_OFFICIAL,
+                'date_leave_company' => '2022-03-19',
+            ],
+            'officialQuitJobAfter' => [
+                'name' => 'Duc Official Quit Job After',
+                'email' => 'hapo.official.quit.job.after@haposoft.com',
+                'role_ams_id' => User::ROLE_AMS_USER,
+                'role_id' => User::ROLE_RS_USER,
+                'work_status' => User::WORK_STATUS_OFFICIAL,
+                'date_leave_company' => '2022-03-25',
+            ],
+            'officialAndProbation' => [
+                'name' => 'Duc Official And Probation',
+                'email' => 'hapo.official.and.probation@haposoft.com',
+                'role_ams_id' => User::ROLE_AMS_USER,
+                'role_id' => User::ROLE_RS_USER,
+                'work_status' => User::WORK_STATUS_OFFICIAL,
+                'date_apply_work_status' => '2022-03-15',
+            ],
+            'probation' => [
+                'name' => 'Duc Probation',
+                'email' => 'duc.probation@haposoft.com',
+                'role_ams_id' => User::ROLE_AMS_USER,
+                'role_id' => User::ROLE_RS_USER,
+                'work_status' => User::WORK_STATUS_PROBATION
+            ],
+            'probationQuitJob' => [
+                'name' => 'Duc Probation Quit Job',
+                'email' => 'duc.probation.quit.job@haposoft.com',
+                'role_ams_id' => User::ROLE_AMS_USER,
+                'role_id' => User::ROLE_RS_USER,
+                'work_status' => User::WORK_STATUS_PROBATION,
+                'date_leave_company' => '2022-03-30',
+            ],
