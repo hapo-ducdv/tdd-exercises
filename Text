@@ -1,3 +1,81 @@
+$usersJobChangeLogs = [
+            [
+                'user_id' => 4,
+                'status_id' => User::WORK_STATUS_INTERNSHIP,
+                'start_date' => '2021-02-01',
+                'end_date' => null,
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 5,
+                'status_id' => User::WORK_STATUS_INTERNSHIP,
+                'start_date' => '2021-01-01',
+                'end_date' => '2021-02-28',
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 5,
+                'status_id' => User::WORK_STATUS_PART_TIME,
+                'start_date' => '2021-03-01',
+                'end_date' => null,
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 6,
+                'status_id' => User::WORK_STATUS_OFFICIAL,
+                'start_date' => '2021-01-01',
+                'end_date' => null,
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 7,
+                'status_id' => User::WORK_STATUS_OFFICIAL,
+                'start_date' => '2021-01-01',
+                'end_date' => null,
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 8,
+                'status_id' => User::WORK_STATUS_PROBATION,
+                'start_date' => '2021-02-15',
+                'end_date' => '2021-03-15',
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 9,
+                'status_id' => User::WORK_STATUS_OFFICIAL,
+                'start_date' => '2021-01-01',
+                'end_date' => null,
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 9,
+                'status_id' => User::WORK_STATUS_OFFICIAL,
+                'start_date' => '2021-01-01',
+                'end_date' => null,
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 10,
+                'status_id' => User::WORK_STATUS_PROBATION,
+                'start_date' => '2021-02-01',
+                'end_date' => null,
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 11,
+                'status_id' => User::WORK_STATUS_PROBATION,
+                'start_date' => '2021-02-01',
+                'end_date' => null,
+                'created_by' => 1,
+            ],
+        ];
+
+        foreach ($usersJobChangeLogs as $data) {
+            UsersJobChangeLog::factory()->create($data);
+        }
+
+
 public function definition()
     {
         $user = User::whereNull('role_id')->inRandomOrder()->firstOrFail();
