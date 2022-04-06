@@ -1,0 +1,209 @@
+ public function getWorkStatusUser($userId)
+    {
+        return User::findOrFail($userId)->work_status ?? null;
+    }
+
+    public function dateLeaveCompany($userId)
+    {
+        return User::findOrFail($userId)->date_leave_company ?? null;
+    }
+
+    public function salaryGross($salary, $endDate, $workStatus = [], $dayBefore = null, $dateLeaveCompany = null)
+    {
+//        $parseDateApplyWorkStatus = Carbon::parse($workStatus['dateApply']);
+//        $parseDateLeaveCompany = Carbon::parse($dateLeaveCompany);
+        $parseEndDate = Carbon::parse($endDate);
+        $salaryGross = $salary ?? 0;
+        $actualNumberWorkDaysMonth = countDays($endDate);
+
+        if ($workStatus === User::WORK_STATUS_PROBATION) {
+            $salaryGross = $salary * (config('app.percentage_probationary_salary') / 100);
+        }
+
+//        if ($workStatus['status'] === User::WORK_STATUS_OFFICIAL && $workStatus['dateApply'] && $parseDateApplyWorkStatus->month === $parseEndDate->month && $parseDateApplyWorkStatus->year === $parseEndDate->year && $workStatus['dateApply'] < $endDate) {
+//            $salaryBefore = !empty($request['salaryGross']) ? $request['salaryGross'] * (config('app.percentage_probationary_salary') / 100) * $dayBefore / $actualNumberWorkDaysMonth : 0;
+//            $dayAfter = $parseEndDate->diffInWeekdays($workStatus['dateApply']);
+//            $salaryAfter = !empty($request['salaryGross']) && !empty($actualNumberWorkDaysMonth) ? $request['salaryGross'] * $dayAfter / $actualNumberWorkDaysMonth : 0;
+//            $salaryGross = $salaryBefore + $salaryAfter;
+//        }
+
+//        if ($workStatus['status'] === User::WORK_STATUS_OFFICIAL || $workStatus['status'] === User::WORK_STATUS_PROBATION) {
+//            if ($dateLeaveCompany && $parseDateLeaveCompany->month === $parseEndDate->month && $parseDateLeaveCompany->year === $parseEndDate->year && $dateLeaveCompany < $endDate) {
+//                $numberWorkHours = $numberWorkingDays * config('app.default_number_of_work_hours_in_day');
+//                $standardWorkHours = $actualNumberWorkDaysMonth * config('app.default_number_of_work_hours_in_day');
+//                $salaryGross = $salaryGross * $numberWorkingDays / $actualNumberWorkDaysMonth;
+//            }
+//        }
+
+        return $salaryGross;
+    }
+
+    public function salaryOvertime($hourOvertimeDetails, $date, $salaryOneHour)
+    {
+        $generalSettingOvertimeCoefficient = GeneralSetting::query()->getGeneralSettingsType(GeneralSetting::OVERTIME_COEFFICIENT, $date)->first()->overtime_coefficient ?? [];
+        $generalSettingOvertimeCoefficient = $generalSettingOvertimeCoefficient ? json_decode($generalSettingOvertimeCoefficient) : [];
+        if (!empty($hourOvertimeDetails)) {
+            $normalDay = isset($generalSettingOvertimeCoefficient->coefficientDayNormal) ? ($hourOvertimeDetails['normalDayHours'] * $salaryOneHour * $generalSettingOvertimeCoefficient->coefficientDayNormal) : 0;
+            $dayOff = isset($generalSettingOvertimeCoefficient->coefficientDayOff) ? ($hourOvertimeDetails['dayOffHours'] * $salaryOneHour * $generalSettingOvertimeCoefficient->coefficientDayOff) : 0;
+            $holiday = isset($generalSettingOvertimeCoefficient->coefficientHoliday) ? ($hourOvertimeDetails['holidayHours'] * $salaryOneHour * $generalSettingOvertimeCoefficient->coefficientHoliday) : 0;
+            return $normalDay + $dayOff + $holiday;
+        }
+        return 0;
+    }
+
+    public function hourStandardDefaultMonth()
+    {
+        return config('app.standard_number_of_work_days') * config('app.default_number_of_work_hours_in_day');
+    }
+
+    public function salaryOneHour($workStatus, $salaryGross, $salaryOneHour, $date)
+    {
+        if ($workStatus === User::WORK_STATUS_INTERNSHIP) {
+            return $salaryGross / countDays($date);
+        }
+        return $salaryOneHour ?? ($salaryGross / $this->hourStandardDefaultMonth());
+    }
+
+    public function salaryOvertimeInsurance($hourOvertimeDetails, $salaryOneHour)
+    {
+        if (!empty($hourOvertimeDetails)) {
+            $normalDay = ($hourOvertimeDetails['normalDayHours'] * $salaryOneHour * config('app.difference_is_not_taxable'));
+            $dayOff = ($hourOvertimeDetails['dayOffHours'] * $salaryOneHour);
+            $holiday = ($hourOvertimeDetails['holidayHours'] * $salaryOneHour);
+            return $normalDay + $dayOff + $holiday;
+        }
+        return 0;
+    }
+
+    public function subsidy($subsidyDetails)
+    {
+        $subsidy = 0;
+        if (!empty($subsidyDetails)) {
+            foreach ($subsidyDetails as $subsidyDetail) {
+                $subsidy += $subsidyDetail['money'];
+            }
+            return $subsidy;
+        }
+        return $subsidy;
+    }
+
+    public function totalDeductionFamily($numberDependentPerson = 0, $date)
+    {
+        $generalSettingDeduction = GeneralSetting::getGeneralSettingsType(GeneralSetting::DEDUCTION_FOR_FAMILY_CONDITION, $date)->first() ?? [];
+        return isset($numberDependentPerson) && isset($generalSettingDeduction['deduction_for_personal']) ? $generalSettingDeduction['deduction_for_personal'] + ($numberDependentPerson * $generalSettingDeduction['deduction_for_dependent_person']) : 0;
+    }
+
+    public function otherDeductions($otherDeductionsDetails)
+    {
+        $otherDeductions = 0;
+        if (!empty($otherDeductionsDetails)) {
+            foreach ($otherDeductionsDetails as $otherDeductionsDetail) {
+                $otherDeductions += $otherDeductionsDetail['money'];
+            }
+            return $otherDeductions;
+        }
+        return $otherDeductions;
+    }
+
+    public function isDateLeaveCompany($userId, $startDate, $endDate, $beforeDayBreak = null)
+    {
+        $dateLeaveCompany = User::findOrFail($userId)->date_leave_company ? Carbon::parse(User::findOrFail($userId)->date_leave_company) : null;
+        $parseStartDate = Carbon::parse($startDate);
+        $parseEndDate = Carbon::parse($endDate);
+        $dateBreak = Carbon::createFromDate($parseStartDate->year, $parseStartDate->month, Payroll::BREAK_DAY);
+        if ($beforeDayBreak) {
+            return $dateLeaveCompany
+                && $dateLeaveCompany->month === $dateBreak->month && $dateLeaveCompany->year === $dateBreak->year
+                && $dateLeaveCompany->format(config('app.format_date')) < $dateBreak->format(config('app.format_date'));
+        }
+        return $dateLeaveCompany
+            && $dateLeaveCompany->month === $parseEndDate->month && $dateLeaveCompany->year === $parseEndDate->year
+            && $dateLeaveCompany->format(config('app.format_date')) < $endDate;
+    }
+
+    public function insuranceEmployee($date)
+    {
+        $salaryPaidInsurance = GeneralSetting::getGeneralSettingsType(GeneralSetting::PRIMARY_SALARY, $date)->first()->primary_salary ?? 0;
+        $generalSettingPersonalInsurance = GeneralSetting::getGeneralSettingsType(GeneralSetting::PERSONAL_INSURANCE, $date)->first()->personal_insurance ?? 0;
+        return $salaryPaidInsurance * ($generalSettingPersonalInsurance / 100);
+    }
+
+    public function personalIncomeTax($valueIncomeTaxes, $date)
+    {
+        $generalSettingPitRate = GeneralSetting::getGeneralSettingsType(GeneralSetting::PIT_RATE, $date)->first()->pit_rate ?? [];
+        $generalSettingPitRate = $generalSettingPitRate ? json_decode($generalSettingPitRate) : [];
+        $personalIncomeTax = 0;
+        foreach ($generalSettingPitRate as $key => $value) {
+            if ($valueIncomeTaxes <= 0) {
+                $personalIncomeTax = 0;
+                break;
+            }
+            if ($valueIncomeTaxes <= $value->valueMoney) {
+                $personalIncomeTax = $valueIncomeTaxes * ($value->valuePercent / 100) - $value->valueReduce;
+                break;
+            }
+            if ($key === count($generalSettingPitRate) - 1) {
+                $personalIncomeTax = $valueIncomeTaxes * ($value->valuePercent / 100) - $value->valueReduce;
+                break;
+            }
+        }
+        return $personalIncomeTax;
+    }
+
+    public function payrollFormula($request)
+    {
+        $workStatus = $this->getWorkStatusUser($request['userId']);
+        $numberWorkHours = !empty($request['numberWorkHours']) ? $request['numberWorkHours'] : config('app.standard_number_of_work_days') * config('app.default_number_of_work_hours_in_day');
+        $standardWorkHours = !empty($request['standardWorkHours']) ? $request['standardWorkHours'] : config('app.standard_number_of_work_days') * config('app.default_number_of_work_hours_in_day');
+        $salaryOneHour = $this->salaryOneHour($workStatus, $request['salaryGross'] ?? null, $request['salaryOneHour'] ?? null, $request['endDate']);
+        $salaryGross = $this->salaryGross($request['salaryGross'] ?? null, $request['endDate'], $workStatus, $request['dayBefore'] ?? null, $this->dateLeaveCompany($request['userId']));
+        $salaryOvertime = $this->salaryOvertime($request['hourOvertimeDetails'], $request['endDate'], $salaryOneHour);
+        $subsidy = $this->subsidy($request['subsidyDetails']);
+        $totalAmountReceived = $salaryGross + $salaryOvertime + $subsidy;
+        $totalDeductionFamily = $this->totalDeductionFamily($request['numberDependentPerson'] ?? 0, $request['endDate']);
+        $otherDeductions = $this->otherDeductions($request['otherDeductions'] ?? null);
+        $salaryOvertimeInsurance = $this->salaryOvertimeInsurance($request['hourOvertimeDetails'], $salaryOneHour);
+        $insuranceEmployee = $this->insuranceEmployee($request['endDate']);
+        $incomeTaxes = $totalAmountReceived - $totalDeductionFamily - $otherDeductions - $salaryOvertimeInsurance - $insuranceEmployee;
+        $personalIncomeTax = $this->personalIncomeTax($incomeTaxes, $request['endDate']);
+        $amountActuallyReceived = 0;
+        if ($workStatus === User::WORK_STATUS_INTERNSHIP) {
+            $amountActuallyReceived = !empty($standardWorkHours) ? $salaryGross * $numberWorkHours / $standardWorkHours + $subsidy + $salaryOvertime : 0;
+        }
+        if ($workStatus === User::WORK_STATUS_PART_TIME) {
+            $amountActuallyReceived = $salaryOneHour * $numberWorkHours + $subsidy + $salaryOvertime;
+        }
+        if ($workStatus === User::WORK_STATUS_INTERNSHIP || $workStatus === User::WORK_STATUS_PART_TIME) {
+            $personalIncomeTax = 0;
+            $incomeTaxes = 0;
+            $insuranceEmployee = 0;
+            $totalDeductionFamily = 0;
+        }
+        if ($workStatus === User::WORK_STATUS_OFFICIAL || $workStatus === User::WORK_STATUS_PROBATION) {
+            $amountActuallyReceived = $totalAmountReceived - $personalIncomeTax - $insuranceEmployee;
+        }
+
+        return [
+            'user_id' => $request['userId'],
+            'salary_gross' => $request['salaryGross'] ?? 0,
+            'salary_one_hour' => $salaryOneHour,
+            'salary_overtime' => $salaryOvertime,
+            'subsidy' => $subsidy,
+            'total_amount_received' => $totalAmountReceived,
+            'total_deduction_family' => $totalDeductionFamily,
+            'income_taxes' => $incomeTaxes,
+            'personal_income_tax' => $personalIncomeTax,
+            'insurance_employee' => $insuranceEmployee,
+            'other_deductions' => $otherDeductions,
+            'amount_actually_received' => $amountActuallyReceived,
+            'hour_overtime_details' => !empty($request['hourOvertimeDetails']) ? json_encode($request['hourOvertimeDetails']) : null,
+            'subsidy_details' => !empty($request['subsidyDetails']) ? json_encode($request['subsidyDetails']) : null,
+            'number_dependent_person' => isset($request['numberDependentPerson']) ? $request['numberDependentPerson'] : 0,
+            'other_deductions_detail' => !empty($request['subsidyDetails']) ? json_encode($request['otherDeductionsDetails']) : null,
+            'status' => mt_rand(1, 4),
+            'number_work_hours' => $numberWorkHours,
+            'standard_number_work_hours_month' => $standardWorkHours,
+            'start_date' => $request['startDate'],
+            'end_date' => $request['endDate'],
+        ];
+    }
