@@ -1,0 +1,110 @@
+//
+//    public function switchPayrollFormula($request)
+//    {
+//        $data = [];
+//        if ($request['type']) {
+//            if ($request['type'] === User::WORK_STATUS_INTERNSHIP) {
+//                $data = $this ->payrollFormulaInternship($request);
+//            } elseif ($request['type'] === User::WORK_STATUS_PART_TIME) {
+//                $data = $this ->payrollFormulaPartTime($request);
+//            } elseif ($request['type'] === User::WORK_STATUS_PROBATION) {
+//                $data = $this ->payrollFormulaProbation($request);
+//            } elseif ($request['type'] === User::WORK_STATUS_OFFICIAL) {
+//                $data = $this ->payrollFormulaOfficial($request);
+//            }
+//            $data['user_id'] = $request['userId'];
+//            $data['start_date'] = $request['startDate'];
+//            $data['end_date'] = $request['endDate'];
+//            return $data;
+//        }
+//    }
+//
+//    public function payrollFormulaInternship($request)
+//    {
+//        $salaryGross = $request['salaryGross'] ?? 0;
+//        $numberWorkHours = $request['standardWorkHours'] ?? 0;
+//        $standardWorkHours = $request['standardWorkHours'] ?? 0;
+//        $salaryOneHour = $salaryGross / $standardWorkHours;
+//        $subsidy = $this->subsidy($request['subsidyDetails']);
+//        $hourOvertimeDetails = $this->salaryOvertime($request['hourOvertimeDetails'], $request['startDate'], $salaryOneHour);
+//        $amountActuallyReceived = $standardWorkHours !== 0 ? $salaryGross * $numberWorkHours / $standardWorkHours + $subsidy + $hourOvertimeDetails : 0;
+//
+//        return [
+//            'salary_gross' => $salaryGross,
+//            'salary_one_hour' => $salaryOneHour,
+//            'number_work_hours' => $numberWorkHours,
+//            'standard_work_hours' => $standardWorkHours,
+//            'amount_actually_received' => $amountActuallyReceived,
+//            'hour_overtime_details' => !empty($request['hourOvertimeDetails']) ? json_encode($request['hourOvertimeDetails']) : null,
+//            'subsidy_details' => !empty($request['subsidyDetails']) ? json_encode($request['subsidyDetails']) : null,
+//        ];
+//    }
+//
+//    public function payrollFormulaPartTime($request)
+//    {
+//        $salaryOneHour = $request['salaryOneHour'] ?? 0;
+//        $numberWorkHours = $request['standardWorkHours'] ?? 0;
+//        $subsidy = $this->subsidy($request);
+//        $hourOvertimeDetails = $this->salaryOvertime($request['hourOvertimeDetails'], $request['startDate'], $salaryOneHour);
+//        $amountActuallyReceived = $salaryOneHour * $numberWorkHours + $subsidy + $hourOvertimeDetails;
+//
+//        return [
+//            'salary_one_hour' => $salaryOneHour,
+//            'number_work_hours' => $numberWorkHours,
+//            'subsidy' => $subsidy,
+//            'amount_actually_received' => $amountActuallyReceived,
+//            'hour_overtime_details' => !empty($request['hourOvertimeDetails']) ? json_encode($request['hourOvertimeDetails']) : null,
+//            'subsidy_details' => !empty($request['subsidyDetails']) ? json_encode($request['subsidyDetails']) : null,
+//        ];
+//    }
+//
+//    public function payrollFormulaOfficial($request)
+//    {
+//        $salaryGross = !empty($request['salaryGross']) ? $request['salaryGross'] : 0;
+//        $totalAmountReceived = $salaryGross + $this->salaryOvertime($request['hourOvertimeDetails'], $request['startDate']) + $this->subsidy(($request['subsidyDetails']);
+////        $totalAmountReceived = $salaryGross + $this->subsidy()
+//
+//        if ($dateApplyWorkStatus && $parseDateApplyWorkStatus->month === $parseEndDate->month && $parseDateApplyWorkStatus->year === $parseEndDate->year && $dateApplyWorkStatus < $endDate) {
+//            $dayBefore = $parseStartDate->diffInWeekdays($parseDateApplyWorkStatus);
+//            $salaryBefore = !empty($request['salaryGross']) ? $request['salaryGross'] * (config('app.percentage_probationary_salary') / 100) * $dayBefore / $actualNumberWorkDaysMonth : 0;
+//            $dayAfter = $parseEndDate->diffInWeekdays($parseDateApplyWorkStatus);
+//            $salaryAfter = !empty($request['salaryGross']) && !empty($actualNumberWorkDaysMonth) ? $request['salaryGross'] * $dayAfter / $actualNumberWorkDaysMonth : 0;
+//            $salaryGross = $salaryBefore + $salaryAfter;
+//        }
+//
+//        if ($dateLeaveCompany && $parseDateLeaveCompany->month === $parseEndDate->month && $parseDateLeaveCompany->year === $parseEndDate->year && $dateLeaveCompany < $endDate) {
+//            $numberWorkHours = $numberWorkingDays * config('app.default_number_of_work_hours_in_day');
+//            $standardWorkHours = $actualNumberWorkDaysMonth * config('app.default_number_of_work_hours_in_day');
+//            $salaryGross = $salaryGross * $numberWorkingDays / $actualNumberWorkDaysMonth;
+//        }
+//
+//        $amountActuallyReceived = $totalAmountReceived - $personalIncomeTax - $insuranceEmployee;
+//
+//        return [
+//            'user_id' => $request['id'],
+//            'salaryOneHour' => $salaryOneHour,
+//            'number_work_hours' => $numberWorkHours,
+//            'subsidy' => $subsidy,
+//            'amount_actually_received' => $amountActuallyReceived,
+//            'hour_overtime_details' => !empty($request['hourOvertimeDetails']) ? json_encode($request['hourOvertimeDetails']) : null,
+//            'subsidy_details' => !empty($request['subsidyDetails']) ? json_encode($request['subsidyDetails']) : null,
+//        ];
+//    }
+//
+//    public function payrollFormulaProbation($request) {
+//        $salaryOneHour = $request['salaryOneHour'] ?? 0;
+//        $numberWorkHours = $request['standardWorkHours'] ?? 0;
+//        $subsidy = $this->subsidy($request);
+//        $hourOvertimeDetails = $this->salaryOvertime($request);
+//        $amountActuallyReceived = $salaryOneHour * $numberWorkHours + $subsidy + $hourOvertimeDetails;
+//
+//        return [
+//            'user_id' => $request['id'],
+//            'salaryOneHour' => $salaryOneHour,
+//            'number_work_hours' => $numberWorkHours,
+//            'subsidy' => $subsidy,
+//            'amount_actually_received' => $amountActuallyReceived,
+//            'hour_overtime_details' => !empty($request['hourOvertimeDetails']) ? json_encode($request['hourOvertimeDetails']) : null,
+//            'subsidy_details' => !empty($request['subsidyDetails']) ? json_encode($request['subsidyDetails']) : null,
+//        ];
+//    }
