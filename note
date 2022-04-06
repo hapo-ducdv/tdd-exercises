@@ -1,3 +1,17 @@
+if (! function_exists('countDays')) {
+    function countDays($date)
+    {
+        $parseDate = Carbon::parse($date);
+        $monthName = $parseDate->format('F');
+        $year = $parseDate->year;
+        $startDate = new Carbon('first day of '. $monthName . $year);
+        $enDate = new Carbon('last day of '. $monthName . $year);
+        $enDate = Carbon::parse($enDate)->addDay();
+        return $startDate->diffInWeekdays($enDate);
+    }
+}
+
+
 //
 //    public function switchPayrollFormula($request)
 //    {
