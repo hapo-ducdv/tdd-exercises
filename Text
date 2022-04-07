@@ -1,3 +1,131 @@
+public function getWorkStatusCurrentAttribute()
+    {
+        $currentDay = Carbon::now();
+        $sos = $this->filterWorkStatusUser($currentDay->format(config('app.format_date')))->get(['start_date', 'status_id'])->last();
+        if (isset($sos)) {
+            return $sos && $sos['status_id'] ? $sos['status_id'] : null;
+        }
+        return '';
+    }
+
+    public function filterWorkStatusUser($date)
+    {
+        return $this->usersJobChangeLogs()->where('start_date', '<=', $date)->where(function ($q) use ($date) {
+            $q->orWhereNull('end_date')->orWhere('end_date', '>=', $date);
+        });
+    }
+
+    public function getServicesForPayrollAttribute()
+    {
+        if (request()->query() && isset(request()->yearMonth)) {
+            $time = Carbon::parse(request()->yearMonth);
+            $firstDayMonth = new Carbon(config('app.first_day_of') . ' ' . $time->format('F') . ' ' . $time->year);
+            $lastDayMonth = new Carbon(config('app.last_day_of') . ' ' . $time->format('F') . ' ' . $time->year);
+            $statusByDate = $this->filterWorkStatusUser($lastDayMonth->format(config('app.format_date')))->get(['start_date', 'status_id'])->last();
+            if (isset($statusByDate)) {
+                $special = $statusByDate['start_date'] && $statusByDate['start_date']->day > $firstDayMonth->day && $statusByDate['start_date']->month === $firstDayMonth->month && $statusByDate['start_date']->year === $firstDayMonth->year ? 1 : null;
+            }
+
+            return [
+                'work_status' => isset($statusByDate) ? $statusByDate['status_id'] : null,
+                'date_apply_work_status' => isset($statusByDate) ? $statusByDate['start_date']->format(config('app.format_date')) : null,
+                'special' => $special ?? null,
+                'start_date' => $firstDayMonth->format(config('app.format_date')),
+                'end_date' => $lastDayMonth->format(config('app.format_date')),
+            ];
+        } else {
+            $currentDay = Carbon::now()->day;
+            $firstDayMonth = new Carbon(config('app.first_day_this_month'));
+            $lastDayMonth = new Carbon(config('app.last_day_this_month'));
+            if ($currentDay <= Payroll::CHECK_DAY) {
+                $firstDayMonth = new Carbon(config('app.first_day_last_month'));
+                $lastDayMonth = new Carbon(config('app.last_day_last_month'));
+            }
+            $statusByDate = $this->filterWorkStatusUser($lastDayMonth->format(config('app.format_date')))->get(['start_date', 'status_id'])->last();
+            if (isset($statusByDate)) {
+                $special = $statusByDate['start_date'] && $statusByDate['start_date']->day > $firstDayMonth->day && $statusByDate['start_date']->month === $firstDayMonth->month && $statusByDate['start_date']->year === $firstDayMonth->year ? 1 : null;
+            }
+
+            return [
+                'work_status' => isset($statusByDate) ? $statusByDate['status_id'] : null,
+                'date_apply_work_status' => isset($statusByDate) ? $statusByDate['start_date']->format(config('app.format_date')) : null,
+                'special' => $special ?? null,
+                'start_date' => $firstDayMonth->format(config('app.format_date')),
+                'end_date' => $lastDayMonth->format(config('app.format_date')),
+            ];
+        }
+    }
+    
+    
+$usersJobChangeLogs = [
+            [
+                'user_id' => 4,
+                'status_id' => User::WORK_STATUS_INTERNSHIP,
+                'start_date' => '2022-02-01',
+                'end_date' => null,
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 5,
+                'status_id' => User::WORK_STATUS_INTERNSHIP,
+                'start_date' => '2022-01-01',
+                'end_date' => '2022-02-28',
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 5,
+                'status_id' => User::WORK_STATUS_PART_TIME,
+                'start_date' => '2022-03-01',
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 6,
+                'status_id' => User::WORK_STATUS_OFFICIAL,
+                'start_date' => '2022-01-01',
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 7,
+                'status_id' => User::WORK_STATUS_OFFICIAL,
+                'start_date' => '2022-01-01',
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 8,
+                'status_id' => User::WORK_STATUS_PROBATION,
+                'start_date' => '2022-02-1',
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 9,
+                'status_id' => User::WORK_STATUS_PROBATION,
+                'start_date' => '2022-02-15',
+                'end_date' => '2022-03-14',
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 9,
+                'status_id' => User::WORK_STATUS_OFFICIAL,
+                'start_date' => '2022-03-15',
+                'end_date' => null,
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 10,
+                'status_id' => User::WORK_STATUS_PROBATION,
+                'start_date' => '2022-03-01',
+                'created_by' => 1,
+            ],
+            [
+                'user_id' => 11,
+                'status_id' => User::WORK_STATUS_PROBATION,
+                'start_date' => '2022-03-01',
+                'created_by' => 1,
+            ],
+        ];
+
+
+
 $usersJobChangeLogs = [
             [
                 'user_id' => 4,
