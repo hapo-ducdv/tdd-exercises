@@ -1,0 +1,64 @@
+const [filters, setFilters] = useState({keyword: router.query?.keyword ?? '', yearMonth: router.query?.yearMonth ?? '', status: router.query?.status ?? ''});
+
+  useEffect(() => {
+    dispatch(getData(router.asPath));
+  }, [router.asPath]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const timeOutInputKeyword = useRef(null);
+  const focusInputKeyword = useRef(null);
+  useEffect(() => {
+    localStorage.getItem('focus-input-keyword') && focusInputKeyword.current.focus();
+  });
+
+  const ojbFilters = {};
+  const routerPush = (keyword, status, yearMonth) => {
+    keyword && (ojbFilters.keyword = keyword);
+    status && (ojbFilters.status = status);
+    yearMonth && (ojbFilters.yearMonth = yearMonth);
+    !keyword && delete ojbFilters.keyword;
+    !status && delete ojbFilters.status;
+    !yearMonth && delete ojbFilters.yearMonth;
+    router.push({ pathname: 'payrolls', query: ojbFilters });
+  }
+
+  const handleChangeValue = (e) => {
+    const getValueFiltersCurrent = { ...filters, [e.target.name]: e.target.value};
+    setFilters(getValueFiltersCurrent);
+    if(e.target.name === 'keyword') {
+      localStorage.setItem('focus-input-keyword', 'true');
+      if (timeOutInputKeyword.current) {
+        clearTimeout(timeOutInputKeyword.current);
+      }
+      timeOutInputKeyword.current = setTimeout(() => {
+        routerPush(getValueFiltersCurrent?.keyword, getValueFiltersCurrent?.status, getValueFiltersCurrent?.yearMonth);
+      }, 500);
+    }
+    if (e.target.name === 'status') {
+      routerPush(getValueFiltersCurrent?.keyword, getValueFiltersCurrent?.status, getValueFiltersCurrent?.yearMonth);
+    }
+  };
+
+  const handleRemoveFocusInputKeyword = () => {
+    localStorage.removeItem('focus-input-keyword');
+  }
+
+  const handleChange = (date, name) => {
+    const value = date ? moment(date).format(setting.format_value_moment_date) : null;
+    const getValueFiltersCurrent = { ...filters, [name]: value }
+    setFilters(getValueFiltersCurrent);
+    routerPush(getValueFiltersCurrent?.keyword, getValueFiltersCurrent?.status, getValueFiltersCurrent?.yearMonth);
+  }
