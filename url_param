@@ -29,9 +29,9 @@ const timeOutInputKeyword = useRef(null);
     keyword && (ojbFilters.keyword = keyword);
     status && (ojbFilters.status = status);
     yearMonth && (ojbFilters.yearMonth = yearMonth);
-    !keyword && delete ojbFilters.keyword;
-    !status && delete ojbFilters.status;
-    !yearMonth && delete ojbFilters.yearMonth;
+    !keyword && ojbFilters.keyword && delete ojbFilters.keyword;
+    !status && ojbFilters.status && delete ojbFilters.status;
+    !yearMonth && ojbFilters.yearMonth && delete ojbFilters.yearMonth;
     router.push({ pathname: 'payrolls', query: ojbFilters });
   }
 
