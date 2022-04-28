@@ -1,0 +1,177 @@
+$payroll = Payroll::query()->with(['user', 'user.departments', 'salaryLevel', 'allowance'])->findOrFail($request['id']);
+        $primarySalary = GeneralSetting::getGeneralSettingsType(GeneralSetting::PRIMARY_SALARY, $payroll['start_date'])->first()->primary_salary ?? 0;
+        $unionFees = (GeneralSetting::getGeneralSettingsType(GeneralSetting::UNION_FEES, $payroll['start_date'])->first()->union_fees ?? 0) / 100 * $primarySalary;
+        $generalInsurance = (GeneralSetting::getGeneralSettingsType(GeneralSetting::GENERAL_INSURANCE, $payroll['start_date'])->first()->general_insurance ?? 0) / 100 * $primarySalary;
+        $personalInsurance = (GeneralSetting::getGeneralSettingsType(GeneralSetting::PERSONAL_INSURANCE, $payroll['start_date'])->first()->personal_insurance ?? 0) / 100 * $primarySalary;
+        $totalInsurance = $generalInsurance + ($payroll['insurance_employee'] ?? 0);
+        $workStatus = UsersJobChangeLog::getUserWorkStatus($payroll['user_id'], $payroll['start_date'], $payroll['end_date']);
+        $getNameWorkStatus = User::getWorkStatus()[$workStatus];
+        $workStatus = (clone $payroll)->salaryLevel()->pluck('work_status')->toArray();
+        $data = [
+            'payroll' => $payroll,
+            'tradeUnion' => round($unionFees),
+            'generalInsurance' => round($generalInsurance),
+            'personalInsurance' => round($personalInsurance),
+            'primarySalary' => $primarySalary,
+            'totalInsurance' => $totalInsurance,
+            'workStatus' => $workStatus,
+            'getNameWorkStatus' => $getNameWorkStatus,
+        ];
+        return PDF::loadView('payrolls.download-pdf', $data)->download('abc.pdf');
+
+
+
+
+
+
+
+
+
+
+
+<!doctype>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <style>
+        @font-face {
+            font-family: 'TimesNewRoman';
+            font-style: normal;
+            font-weight: 400;
+            src: url('{{public_path("fonts/times-new-roman.ttf")}}');
+        }
+
+        body {
+            font-family: "TimesNewRoman", serif !important;
+            margin-top: 100px;
+        }
+
+        table, td, th {
+            border: 1px solid;
+            font-weight: 400 !important;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        b {
+            font-weight: 400 !important;
+        }
+    </style>
+</head>
+<body>
+<p>Họ và tên: {{ $payroll->user['name'] }}</p>
+<p>Vị trí: {{ $getNameWorkStatus ?? '' }}</p>
+<p>Bảng lương tháng: {{  substr($payroll['start_date'], 5, 2) }}</p>
+<table>
+    <thead>
+    <tr>
+        @if(count($payroll->salaryLevel) > 1)
+            <th><span>Thời gian</span></th>
+            <th><span>Trạng thái làm việc</span></th>
+        @endif
+        @if(!empty(array_intersect($workStatus, [App\Models\User::WORK_STATUS_INTERNSHIP, App\Models\User::WORK_STATUS_OFFICIAL, App\Models\User::WORK_STATUS_PROBATION])))
+            <th><span>Lương thỏa thuận</span></th>
+        @endif
+        @if(!empty(array_intersect($workStatus, [App\Models\User::WORK_STATUS_PART_TIME, App\Models\User::WORK_STATUS_OFFICIAL, App\Models\User::WORK_STATUS_PROBATION])))
+            <th><span>Lương 1 giờ</span></th>
+        @endif
+        @if(!empty(array_intersect($workStatus, [App\Models\User::WORK_STATUS_INTERNSHIP])))
+            <th><span>Số giờ làm việc chuẩn của tháng</span></th>
+        @endif
+        @if(!empty(array_intersect($workStatus, [App\Models\User::WORK_STATUS_INTERNSHIP, App\Models\User::WORK_STATUS_PART_TIME])))
+            <th><span>Số giờ làm việc</span></th>
+        @endif
+        @if(!empty(array_intersect($workStatus, [App\Models\User::WORK_STATUS_OFFICIAL, App\Models\User::WORK_STATUS_PROBATION])))
+            <th><span>Số OT ngày thường</span></th>
+            <th><span>Số OT ngày nghỉ</span></th>
+            <th><span>Số OT ngày lễ</span></th>
+            <th><span>Số tiền OT</span></th>
+            <th><span>Lương và tiền OT</span></th>
+            <th><span>Lương bắt đầu đóng thuế</span></th>
+            <th><span>Thu nhập chịu thuế</span></th>
+            <th><span>Thuế tncn</span></th>
+            <th><span>Mức lương đóng bảo hiểm</span></th>
+            <th><span>Trade Union</span></th>
+            <th><span>Phần BHXH cá nhân</span></th>
+            <th><span>Phần BHXN công ty</span></th>
+            <th><span>Tổng bảo hiểm phải đóng</span></th>
+        @endif
+        @if(count($payroll->allowance) > 0)
+            <th><span>Trợ cấp</span></th>
+        @endif
+        <th><span>Tổng số tiền thực lĩnh</span></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach($payroll->salaryLevel as $key => $data)
+        <tr>
+            @if(count($payroll->salaryLevel) > 1)
+                <td>Từ {{ substr($data['start_date'], 0, 10) . ' đến ' . substr($data['end_date'], 0, 10) }}</td>
+                <td>{{ (\App\Models\User::getWorkStatus()[$data['work_status']]) }}</td>
+            @endif
+            @if(!empty(array_intersect($workStatus, [App\Models\User::WORK_STATUS_INTERNSHIP, App\Models\User::WORK_STATUS_OFFICIAL, App\Models\User::WORK_STATUS_PROBATION])))
+                <td>
+                    {{ in_array($data['work_status'], [App\Models\User::WORK_STATUS_INTERNSHIP, App\Models\User::WORK_STATUS_OFFICIAL, App\Models\User::WORK_STATUS_PROBATION]) ? number_format($data['gross_salary']) : '-' }}
+                </td>
+            @endif
+            @if(!empty(array_intersect($workStatus, [App\Models\User::WORK_STATUS_PART_TIME, App\Models\User::WORK_STATUS_OFFICIAL, App\Models\User::WORK_STATUS_PROBATION])))
+                <td>
+                    {{ in_array($data['work_status'], [App\Models\User::WORK_STATUS_PART_TIME, App\Models\User::WORK_STATUS_OFFICIAL, App\Models\User::WORK_STATUS_PROBATION]) ? number_format(round($data['hourly_pay'])) ?? 0 : '-' }}
+                </td>
+            @endif
+            @if(!empty(array_intersect($workStatus, [App\Models\User::WORK_STATUS_INTERNSHIP])))
+                <td>
+                    {{ in_array($data['work_status'], [App\Models\User::WORK_STATUS_INTERNSHIP]) ? (countDaysWorking($payroll['start_date'], $payroll['end_date']) * 8 ?? 0) : '-' }}
+                </td>
+            @endif
+            @if(!empty(array_intersect($workStatus, [App\Models\User::WORK_STATUS_INTERNSHIP, App\Models\User::WORK_STATUS_PART_TIME])))
+                <td>{{ number_format($data['working_hours']) ?? 0 }}</td>
+            @endif
+            @if(!empty(array_intersect($workStatus, [App\Models\User::WORK_STATUS_OFFICIAL, App\Models\User::WORK_STATUS_PROBATION])))
+                <td>{{ number_format($data['ot_normal_day']) ?? 0 }}</td>
+                <td>{{ number_format($data['ot_weekend_day']) ?? 0 }}</td>
+                <td>{{ number_format($data['ot_holiday']) ?? 0 }}</td>
+                <td>{{ number_format($data['total_salary_ot']) ?? 0 }}</td>
+                <td>{{ number_format($data['total_salary_ot'] + $data['gross_salary']) ?? 0 }}</td>
+                @if($key === 0)
+                    <td rowspan="{{count($payroll->salaryLevel)}}">{{ number_format($payroll['salary_starting_to_pay_taxes']) ?? 0 }}</td>
+                @endif
+                @if($key === 0)
+                    <td rowspan="{{count($payroll->salaryLevel)}}">{{ number_format($payroll['income_taxes']) ?? 0 }}</td>
+                @endif
+                @if($key === 0)
+                    <td rowspan="{{count($payroll->salaryLevel)}}">{{ number_format($payroll['personal_income_tax']) ?? 0 }}</td>
+                @endif
+                @if($key === 0)
+                    <td rowspan="{{count($payroll->salaryLevel)}}">{{ number_format($primarySalary) ?? 0 }}</td>
+                @endif
+                @if($key === 0)
+                    <td rowspan="{{count($payroll->salaryLevel)}}">{{ number_format($tradeUnion) ?? 0 }}</td>
+                @endif
+                @if($key === 0)
+                    <td rowspan="{{count($payroll->salaryLevel)}}">{{ number_format($payroll['insurance_employee']) ?? 0 }}</td>
+                @endif
+                @if($key === 0)
+                    <td rowspan="{{count($payroll->salaryLevel)}}">{{ number_format($generalInsurance) ?? 0 }}</td>
+                @endif
+                @if($key === 0)
+                    <td rowspan="{{count($payroll->salaryLevel)}}">{{ number_format($totalInsurance) ?? 0 }}</td>
+                @endif
+            @endif
+            @if(count($payroll->allowance) > 0)
+                @if($key === 0)
+                    <td rowspan="{{count($payroll->salaryLevel)}}">{{ number_format($payroll->subsidy) ?? 0 }}</td>
+                @endif
+            @endif
+            @if($key === 0)
+                <td rowspan="{{count($payroll->salaryLevel)}}">{{ number_format($payroll['amount_actually_received']) ?? 0 }}</td>
+            @endif
+        </tr>
+    @endforeach
+    </tbody>
+</table>
+</body>
